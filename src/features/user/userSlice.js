@@ -1,9 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import url from "../../utils/axios";
-import { addUserToLocalStorage, getUserFromLocalStorage } from "../../utils/localStorage";
+import { addUserToLocalStorage, getUserFromLocalStorage, removeUserFromLocalStorage } from "../../utils/localStorage";
+import { registerUserThunk ,loginUserThunk ,updateUserThunk} from "./userThunk";
 const initialState = {
   isLoading: false,
+  isSidebarOpen: false,
   user: getUserFromLocalStorage(),
 };
 
@@ -11,13 +13,7 @@ export const registerUser = createAsyncThunk(
   "user/registerUser",
   async (user, thunkAPI) => {
     console.log(`Register user ${JSON.stringify(user)}`);
-    try{
-        const response = await url.post("/auth/testingRegister",user);
-        return response.data;
-    }catch(error){
-        //need to add this to databse
-        return thunkAPI.rejectWithValue(error.response.data.msg);
-    }
+    return registerUserThunk("/auth/register",user,thunkAPI);
   }
 );
 
@@ -25,18 +21,29 @@ export const loginUser = createAsyncThunk(
   "user/loginUser",
   async (user, thunkAPI) => {
     console.log(`Login user ${JSON.stringify(user)}`);
-    try{
-       const response = await url.post("/auth/login",user);
-       return response.data;
-    }catch(error){
-        return thunkAPI.rejectWithValue(error.response.data.msg);
-    }
+    return loginUserThunk("/auth/login",user,thunkAPI);
   }
 );
+
+export const updateUser = createAsyncThunk(
+  'user/updateUser',async(user,thunkAPI)=>{
+   return updateUserThunk('/auth/update',user,thunkAPI);
+  }
+)
 
 const userSlice = createSlice({
   name: "user",
   initialState,
+  reducers:{
+    toggleSidebar:(state)=>{
+      state.isSidebarOpen = !state.isSidebarOpen;
+    },
+    logOutUser:(state)=>{
+      state.user = null;
+      state.isSidebarOpen=false;
+      removeUserFromLocalStorage();
+    }
+  },
   extraReducers: (builder) => {
     builder
       .addCase(registerUser.pending, (state) => {
@@ -66,8 +73,21 @@ const userSlice = createSlice({
       .addCase(loginUser.rejected, (state, { payload }) => {
         state.isLoading = false;
         toast.error(`oops ${payload}`);
+      })
+      .addCase(updateUser.pending,(state)=>{
+        state.isLoading = true;
+      })
+      .addCase(updateUser.fulfilled,(state,{payload})=>{
+        state.isLoading = false;
+        const {user} = payload;
+        state.user = user;
+        addUserToLocalStorage(payload);
+        toast.success('User Updated');
+      }).addCase(updateUser.rejected,(state,{payload})=>{
+        state.isLoading = false;
+        toast.error(`oops ${payload}`);
       });
   }
 });
-
+export const {toggleSidebar,logOutUser} = userSlice.actions;
 export default userSlice.reducer;
