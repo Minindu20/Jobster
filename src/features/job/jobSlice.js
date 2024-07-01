@@ -1,8 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
-import customFetch from "../../utils/axios";
+
 import { getUserFromLocalStorage } from "../../utils/localStorage";
-import { showLoading, hideLoading, getAllJobs } from "../allJobs/allJobSlice";
+
+import { createJobThunk,editJobThunk,deleteJobThunk } from "./jobThunk";
 const initialState = {
   isLoading: false,
   position: "",
@@ -18,55 +19,17 @@ const initialState = {
 
 export const createJob = createAsyncThunk(
   "job/createJob",
-  async (job, thunkAPI) => {
-    try {
-      const resp = await customFetch.post("/jobs", job, {
-        headers: {
-          authorization: `Bearer ${thunkAPI.getState().user.user.token}`,
-        },
-      });
-      thunkAPI.dispatch(clearValues());
-      return resp.data;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(error.response.data.msg);
-    }
-  }
+  createJobThunk
 );
 
 export const deleteJob = createAsyncThunk(
   "job/deleteJob",
-  async (jobId, thunkAPI) => {
-    thunkAPI.dispatch(showLoading());
-    try {
-      const resp = await customFetch.delete(`/jobs/${jobId}`, {
-        headers: {
-          authorization: `Bearer ${thunkAPI.getState().user.user.token}`,
-        },
-      });
-      thunkAPI.dispatch(getAllJobs());
-      return resp.data.msg;
-    } catch (error) {
-      thunkAPI.dispatch(hideLoading());
-      return thunkAPI.rejectWithValue(error.response.data.msg);
-    }
-  }
+  deleteJobThunk
 );
 
 export const editJob = createAsyncThunk(
   "job/editJob",
-  async ({ jobId, job }, thunkAPI) => {
-    try {
-      const resp = await customFetch.patch(`/jobs/${jobId}`, job, {
-        headers: {
-          authorization: `Bearer ${thunkAPI.getState().user.user.token}`,
-        },
-      });
-      thunkAPI.dispatch(clearValues());
-      return resp.data;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(error.response.data.msg);
-    }
-  }
+  editJobThunk
 );
 
 const jobSlice = createSlice({
