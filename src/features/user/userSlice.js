@@ -1,8 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
-import url from "../../utils/axios";
 import { addUserToLocalStorage, getUserFromLocalStorage, removeUserFromLocalStorage } from "../../utils/localStorage";
-import { registerUserThunk ,loginUserThunk ,updateUserThunk} from "./userThunk";
+import { registerUserThunk ,loginUserThunk ,updateUserThunk,clearStorThunk} from "./userThunk";
 const initialState = {
   isLoading: false,
   isSidebarOpen: false,
@@ -30,6 +29,8 @@ export const updateUser = createAsyncThunk(
    return updateUserThunk('/auth/update',user,thunkAPI);
   }
 )
+
+export const clearStore = createAsyncThunk('user/clearStore',clearStorThunk);
 
 const userSlice = createSlice({
   name: "user",
@@ -86,7 +87,9 @@ const userSlice = createSlice({
       }).addCase(updateUser.rejected,(state,{payload})=>{
         state.isLoading = false;
         toast.error(`oops ${payload}`);
-      });
+      }).addCase(clearStore.rejected,()=>{
+        toast.error('There was an Eroor');
+      })
   }
 });
 export const {toggleSidebar,logOutUser} = userSlice.actions;

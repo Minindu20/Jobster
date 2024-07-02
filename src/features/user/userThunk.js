@@ -1,5 +1,7 @@
 import url from "../../utils/axios";
+import { clearValues } from "../job/jobSlice";
 import { logOutUser } from "./userSlice";
+import { clearAllJobState } from "../allJobs/allJobSlice";
 
 export const registerUserThunk = async (dbUrl, user, thunkAPI) => {
   try {
@@ -32,3 +34,14 @@ export const updateUserThunk = async (dbUrl, user, thunkAPI) => {
     return thunkAPI.rejectWithValue(error.response.data.msg);
   }
 };
+
+export const clearStorThunk = async (message,thunkAPI) =>{
+  try{
+    thunkAPI.dispatch(logOutUser(message));
+    thunkAPI.dispatch(clearAllJobState());
+    thunkAPI.dispatch(clearValues());
+    return Promise.resolve();
+  }catch(error){
+    return Promise.reject();
+  }
+}
